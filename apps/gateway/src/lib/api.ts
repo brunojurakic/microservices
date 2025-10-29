@@ -1,5 +1,11 @@
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://localhost:3001';
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -7,7 +13,8 @@ export interface Product {
   price: string;
   stock: number;
   imageUrl: string | null;
-  category: string | null;
+  categoryId: string | null;
+  category: Category | null;
   createdAt: Date;
   updatedAt: Date;
 }

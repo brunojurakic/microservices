@@ -1,13 +1,31 @@
 import { Router, type Request, type Response } from 'express';
 import { db } from '../db/index.js';
-import { products, type NewProduct } from '../db/schema.js';
+import { products, categories, type NewProduct } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 const router: ReturnType<typeof Router> = Router();
 
 router.get('/', async (req, res) => {
   try {
-    const allProducts = await db.select().from(products);
+    const allProducts = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        price: products.price,
+        stock: products.stock,
+        imageUrl: products.imageUrl,
+        categoryId: products.categoryId,
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+        },
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id));
     res.json(allProducts);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -17,7 +35,26 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const [product] = await db.select().from(products).where(eq(products.id, req.params.id));
+    const [product] = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        price: products.price,
+        stock: products.stock,
+        imageUrl: products.imageUrl,
+        categoryId: products.categoryId,
+        category: {
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+        },
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.id, req.params.id));
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });

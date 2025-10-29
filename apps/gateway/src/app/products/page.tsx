@@ -45,7 +45,7 @@ export default async function ProductsPage() {
                 <CardTitle className="line-clamp-1">{product.name}</CardTitle>
                 {product.category && (
                   <Badge variant="secondary" className="shrink-0">
-                    {product.category}
+                    {product.category.name}
                   </Badge>
                 )}
               </div>
