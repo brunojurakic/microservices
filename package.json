@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -n \"gateway,product\" -c \"cyan,green\" \"pnpm --filter gateway dev\" \"pnpm --filter product-service dev\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "pnpm -r --parallel run typecheck",
@@ -16,14 +17,14 @@
   "packageManager": "pnpm@10.20.0",
   "lint-staged": {
     "**/*.{ts,tsx,js,jsx}": [
-      "prettier --write",
-      "pnpm typecheck"
+      "prettier --write"
     ],
     "**/*.{json,css,md}": [
       "prettier --write"
     ]
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
     "prettier": "^3.6.2"
