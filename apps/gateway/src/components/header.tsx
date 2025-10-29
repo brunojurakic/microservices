@@ -1,9 +1,17 @@
+'use client';
+
 import Link from 'next/link';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSession, signOut } from '@/lib/auth-client';
 
 export function Header() {
-  const isAuthenticated = false;
+  const { data: session, isPending } = useSession();
+
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = '/';
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -21,9 +29,13 @@ export function Header() {
           </Link>
         </nav>
 
-        <div>
-          {isAuthenticated ? (
-            <Button variant="outline" size="sm">
+        <div className="w-20">
+          {isPending ? (
+            <Button variant="ghost" size="sm" disabled>
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </Button>
+          ) : session?.user ? (
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
             </Button>
           ) : (
