@@ -1,4 +1,9 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { getProducts } from '@/lib/api';
+import { getJWTToken } from '@/lib/jwt';
+import { useSession } from '@/lib/auth-client';
 import {
   Card,
   CardContent,
@@ -9,10 +14,91 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
-export default async function ProductsPage() {
-  const products = await getProducts();
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string;
+  stock: number;
+  imageUrl: string | null;
+  categoryId: string | null;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+}
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = async (productId: string) => {
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
+
+    setAddingToCart(productId);
+    try {
+      const token = await getJWTToken();
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const CART_SERVICE_URL = process.env.NEXT_PUBLIC_CART_SERVICE_URL || 'http://localhost:3002';
+      const res = await fetch(`${CART_SERVICE_URL}/cart/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity: 1 }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to add item to cart');
+      }
+
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      alert('Failed to add item to cart. Please try again.');
+    } finally {
+      setAddingToCart(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -70,8 +156,16 @@ export default async function ProductsPage() {
             </CardContent>
 
             <CardFooter>
-              <Button className="w-full" disabled={product.stock === 0}>
-                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+              <Button
+                className="w-full"
+                disabled={product.stock === 0 || addingToCart === product.id}
+                onClick={() => handleAddToCart(product.id)}
+              >
+                {addingToCart === product.id
+                  ? 'Adding...'
+                  : product.stock > 0
+                    ? 'Add to Cart'
+                    : 'Out of Stock'}
               </Button>
             </CardFooter>
           </Card>

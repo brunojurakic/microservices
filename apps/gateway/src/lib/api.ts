@@ -1,4 +1,5 @@
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://localhost:3001';
+const CART_SERVICE_URL = process.env.CART_SERVICE_URL || 'http://localhost:3002';
 
 export interface Category {
   id: string;
@@ -15,6 +16,22 @@ export interface Product {
   imageUrl: string | null;
   categoryId: string | null;
   category: Category | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CartItem {
+  id: string;
+  cartId: string;
+  productId: string;
+  quantity: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Cart {
+  id: string;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,4 +58,91 @@ export async function getProduct(id: string): Promise<Product> {
   }
 
   return res.json();
+}
+
+export async function getCart(jwtToken: string): Promise<{ cart: Cart; items: CartItem[] }> {
+  const res = await fetch(`${CART_SERVICE_URL}/cart`, {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch cart');
+  }
+
+  return res.json();
+}
+
+export async function addToCart(
+  jwtToken: string,
+  productId: string,
+  quantity = 1
+): Promise<CartItem> {
+  const res = await fetch(`${CART_SERVICE_URL}/cart/items`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ productId, quantity }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to add item to cart');
+  }
+
+  return res.json();
+}
+
+export async function updateCartItem(
+  jwtToken: string,
+  itemId: string,
+  quantity: number
+): Promise<CartItem> {
+  const res = await fetch(`${CART_SERVICE_URL}/cart/items/${itemId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ quantity }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to update cart item');
+  }
+
+  return res.json();
+}
+
+export async function removeCartItem(jwtToken: string, itemId: string): Promise<void> {
+  const res = await fetch(`${CART_SERVICE_URL}/cart/items/${itemId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to remove cart item');
+  }
+}
+
+export async function clearCart(jwtToken: string): Promise<void> {
+  const res = await fetch(`${CART_SERVICE_URL}/cart`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to clear cart');
+  }
 }
