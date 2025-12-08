@@ -1,17 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, Loader2, Package, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSession, signOut } from '@/lib/auth-client';
 import { getJWTToken } from '@/lib/jwt';
 import { useEffect, useState } from 'react';
 
+const ADMIN_ROLE_ID = '9f28d6c7-9519-4598-b80c-783515456f43';
+
 export function Header() {
   const { data: session, isPending } = useSession();
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoadingCart, setIsLoadingCart] = useState(false);
+
+  // @ts-expect-error - roleId might not be in type yet
+  const isAdmin = session?.user?.roleId === ADMIN_ROLE_ID;
 
   useEffect(() => {
     async function fetchCartCount() {
@@ -78,6 +83,24 @@ export function Header() {
           >
             Products
           </Link>
+          {session?.user && (
+            <Link
+              href="/orders"
+              className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+            >
+              <Package className="h-4 w-4" />
+              Orders
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+            >
+              <Shield className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">

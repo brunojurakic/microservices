@@ -78,6 +78,7 @@ export default function AdminProductsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -87,6 +88,9 @@ export default function AdminProductsPage() {
             {products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {product.category?.name || 'Uncategorized'}
+                </TableCell>
                 <TableCell>${product.price}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell className="text-right">
@@ -109,7 +113,7 @@ export default function AdminProductsPage() {
             ))}
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No products found
                 </TableCell>
               </TableRow>

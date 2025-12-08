@@ -1,18 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
-import { createProduct } from '@/lib/api';
+import { createProduct, getCategories, type Category } from '@/lib/api';
 import { getJWTToken } from '@/lib/jwt';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -21,6 +23,18 @@ export default function NewProductPage() {
     imageUrl: '',
     categoryId: '',
   });
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    }
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +67,9 @@ export default function NewProductPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -86,6 +102,23 @@ export default function NewProductPage() {
               onChange={handleChange}
               placeholder="Product details..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="categoryId">Category</Label>
+            <Select
+              id="categoryId"
+              name="categoryId"
+              value={formData.categoryId}
+              onChange={handleChange}
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
