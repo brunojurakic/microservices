@@ -294,12 +294,12 @@ export default function CartPage() {
                         price: parseFloat(item.product.price),
                       }));
 
-                      await createOrder(token, orderItems, totalPrice);
+                      const order = await createOrder(token, orderItems, totalPrice);
 
                       await clearCart(token);
                       window.dispatchEvent(new CustomEvent('cartUpdated'));
 
-                      router.push('/orders/success');
+                      router.push(`/orders/success?orderId=${order.id}`);
                     } catch (error) {
                       console.error('Checkout failed:', error);
                       alert('Checkout failed. Please try again.');

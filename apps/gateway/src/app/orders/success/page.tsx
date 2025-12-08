@@ -1,11 +1,27 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OrderSuccessPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get('orderId');
+
+  useEffect(() => {
+    if (!orderId) {
+      router.replace('/orders');
+    }
+  }, [orderId, router]);
+
+  if (!orderId) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
       <Card className="max-w-md w-full text-center">

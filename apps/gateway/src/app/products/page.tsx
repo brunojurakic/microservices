@@ -111,7 +111,6 @@ export default function ProductsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Products</h1>
-        <p className="text-muted-foreground mt-2">Browse our collection of products</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
