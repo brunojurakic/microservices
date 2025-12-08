@@ -79,8 +79,9 @@ export function Header() {
         <nav className="flex items-center gap-6">
           <Link
             href="/products"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
           >
+            <ShoppingBag className="h-4 w-4" />
             Products
           </Link>
           {session?.user && (

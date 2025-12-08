@@ -46,12 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 w-64 flex-col border-r bg-background hidden md:flex">
-        <div className="flex h-14 items-center border-b px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="">E-Shop Admin</span>
-          </Link>
-        </div>
-        <div className="flex-1 overflow-auto py-2">
+        <div className="flex-1 overflow-auto py-20">
           <nav className="grid items-start px-4 text-sm font-medium">
             {links.map((link) => {
               const Icon = link.icon;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getProducts, deleteProduct, type Product } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   Table,
@@ -94,20 +94,15 @@ export default function AdminProductsPage() {
                 <TableCell>${product.price}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" disabled>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => handleDelete(product.id)}
-                      disabled={deletingId === product.id}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive"
+                    onClick={() => handleDelete(product.id)}
+                    disabled={deletingId === product.id}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
