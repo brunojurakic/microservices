@@ -2,3 +2,4 @@ task.txt
 node_modules
 .github
 apps/.DS_Store
+.DS_Store

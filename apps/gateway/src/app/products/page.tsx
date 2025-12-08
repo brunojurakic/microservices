@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProducts } from '@/lib/api';
+
 import { getJWTToken } from '@/lib/jwt';
 import { useSession } from '@/lib/auth-client';
 import {
@@ -35,25 +35,32 @@ interface Product {
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function fetchData() {
       try {
-        const data = await getProducts();
-        setProducts(data);
+        const { getCategories, getProducts } = await import('@/lib/api');
+        const [cats, prods] = await Promise.all([
+          getCategories(),
+          getProducts(selectedCategory || undefined),
+        ]);
+        setCategories(cats);
+        setProducts(prods);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchProducts();
-  }, []);
+    fetchData();
+  }, [selectedCategory]);
 
   const handleAddToCart = async (productId: string) => {
     if (!session?.user) {
@@ -105,6 +112,26 @@ export default function ProductsPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Products</h1>
         <p className="text-muted-foreground mt-2">Browse our collection of products</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        <Button
+          variant={selectedCategory === null ? 'default' : 'outline'}
+          onClick={() => setSelectedCategory(null)}
+          size="sm"
+        >
+          All
+        </Button>
+        {categories.map((cat) => (
+          <Button
+            key={cat.id}
+            variant={selectedCategory === cat.id ? 'default' : 'outline'}
+            onClick={() => setSelectedCategory(cat.id)}
+            size="sm"
+          >
+            {cat.name}
+          </Button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

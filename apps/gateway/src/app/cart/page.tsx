@@ -275,7 +275,38 @@ export default function CartPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" size="lg">
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={async () => {
+                    try {
+                      const token = await getJWTToken();
+                      if (!token) {
+                        router.push('/login');
+                        return;
+                      }
+
+                      const { createOrder, clearCart } = await import('@/lib/api');
+
+                      const orderItems = cartItems.map((item) => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        price: parseFloat(item.product.price),
+                      }));
+
+                      await createOrder(token, orderItems, totalPrice);
+
+                      await clearCart(token);
+                      window.dispatchEvent(new CustomEvent('cartUpdated'));
+
+                      router.push('/orders/success');
+                    } catch (error) {
+                      console.error('Checkout failed:', error);
+                      alert('Checkout failed. Please try again.');
+                    }
+                  }}
+                  disabled={isPending || cartItems.length === 0}
+                >
                   Proceed to Checkout
                 </Button>
               </CardFooter>

@@ -2,12 +2,25 @@ import { Router, type Request, type Response } from 'express';
 import { db } from '../db/index.js';
 import { products, categories, type NewProduct } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { authenticateJWT, requireAdmin, type AuthRequest } from '../middleware/auth.js';
 
 const router: ReturnType<typeof Router> = Router();
 
+router.get('/categories', async (req, res) => {
+  try {
+    const allCategories = await db.select().from(categories);
+    res.json(allCategories);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
-    const allProducts = await db
+    const { categoryId } = req.query;
+
+    let query = db
       .select({
         id: products.id,
         name: products.name,
@@ -26,6 +39,12 @@ router.get('/', async (req, res) => {
       })
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id));
+
+    if (categoryId && typeof categoryId === 'string') {
+      query.where(eq(products.categoryId, categoryId));
+    }
+
+    const allProducts = await query;
     res.json(allProducts);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -67,7 +86,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const newProduct: NewProduct = req.body;
     const [createdProduct] = await db.insert(products).values(newProduct).returning();
@@ -79,7 +98,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const [updatedProduct] = await db
       .update(products)
@@ -98,7 +117,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const [deletedProduct] = await db
       .delete(products)

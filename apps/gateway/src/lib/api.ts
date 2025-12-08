@@ -36,8 +36,24 @@ export interface Cart {
   updatedAt: Date;
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const res = await fetch(`${PRODUCT_SERVICE_URL}/products`, {
+export async function getCategories(): Promise<Category[]> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/products/categories`, {
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch categories');
+  }
+
+  return res.json();
+}
+
+export async function getProducts(categoryId?: string): Promise<Product[]> {
+  const url = categoryId
+    ? `${PRODUCT_SERVICE_URL}/products?categoryId=${categoryId}`
+    : `${PRODUCT_SERVICE_URL}/products`;
+
+  const res = await fetch(url, {
     cache: 'no-store',
   });
 
@@ -55,6 +71,56 @@ export async function getProduct(id: string): Promise<Product> {
 
   if (!res.ok) {
     throw new Error('Failed to fetch product');
+  }
+
+  return res.json();
+}
+
+export async function createProduct(
+  jwtToken: string,
+  product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<Product> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/products`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(product),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to create product');
+  }
+
+  return res.json();
+}
+
+export async function deleteProduct(jwtToken: string, id: string): Promise<void> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/products/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to delete product');
+  }
+}
+
+export async function getAllOrders(jwtToken: string): Promise<Order[]> {
+  const res = await fetch(`${ORDER_SERVICE_URL}/orders`, {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch all orders');
   }
 
   return res.json();
@@ -145,4 +211,61 @@ export async function clearCart(jwtToken: string): Promise<void> {
   if (!res.ok) {
     throw new Error('Failed to clear cart');
   }
+}
+
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://localhost:3003';
+
+export interface OrderItem {
+  id: number;
+  orderId: number;
+  productId: string;
+  quantity: number;
+  priceAtPurchase: string;
+}
+
+export interface Order {
+  id: number;
+  userId: string;
+  totalAmount: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  items: OrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function createOrder(
+  jwtToken: string,
+  items: { productId: string; quantity: number; price: number }[],
+  totalAmount: number
+): Promise<Order> {
+  const res = await fetch(`${ORDER_SERVICE_URL}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ items, totalAmount }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to create order');
+  }
+
+  return res.json();
+}
+
+export async function getMyOrders(jwtToken: string): Promise<Order[]> {
+  const res = await fetch(`${ORDER_SERVICE_URL}/orders/my-orders`, {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch orders');
+  }
+
+  return res.json();
 }
