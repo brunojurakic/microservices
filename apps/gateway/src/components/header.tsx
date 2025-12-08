@@ -8,7 +8,7 @@ import { useSession, signOut } from '@/lib/auth-client';
 import { getJWTToken } from '@/lib/jwt';
 import { useEffect, useState } from 'react';
 
-const ADMIN_ROLE_ID = '9f28d6c7-9519-4598-b80c-783515456f43';
+const ADMIN_ROLE_ID = process.env.NEXT_PUBLIC_ADMIN_ROLE_ID || '';
 
 export function Header() {
   const { data: session, isPending } = useSession();

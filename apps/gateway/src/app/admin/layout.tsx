@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } else {
         // @ts-expect-error - roleId might not be in type yet
         const role = session.user.roleId;
-        const ADMIN_ROLE_ID = '9f28d6c7-9519-4598-b80c-783515456f43';
+        const ADMIN_ROLE_ID = process.env.NEXT_PUBLIC_ADMIN_ROLE_ID || '';
         if (role !== ADMIN_ROLE_ID) {
           router.push('/');
         }

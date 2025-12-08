@@ -48,7 +48,7 @@ export async function authenticateJWT(req: AuthRequest, res: Response, next: Nex
 }
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
-  const ADMIN_ROLE_ID = '9f28d6c7-9519-4598-b80c-783515456f43';
+  const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID || '';
   if (!req.user || req.user.roleId !== ADMIN_ROLE_ID) {
     return res.status(403).json({ error: 'Forbidden: Admin access required' });
   }
