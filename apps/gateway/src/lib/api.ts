@@ -223,20 +223,51 @@ export interface OrderItem {
   priceAtPurchase: string;
 }
 
+export interface ShippingAddress {
+  id: number;
+  orderId: number;
+  fullName: string;
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone: string | null;
+}
+
+export interface OrderStatusHistory {
+  id: number;
+  orderId: number;
+  status: string;
+  note: string | null;
+  changedAt: string;
+}
+
 export interface Order {
   id: number;
   userId: string;
   totalAmount: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   items: OrderItem[];
+  shippingAddress: ShippingAddress | null;
+  statusHistory: OrderStatusHistory[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShippingAddressInput {
+  fullName: string;
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
 }
 
 export async function createOrder(
   jwtToken: string,
   items: { productId: string; quantity: number; price: number }[],
-  totalAmount: number
+  totalAmount: number,
+  shippingAddress?: ShippingAddressInput
 ): Promise<Order> {
   const res = await fetch(`${ORDER_SERVICE_URL}/orders`, {
     method: 'POST',
@@ -244,7 +275,7 @@ export async function createOrder(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${jwtToken}`,
     },
-    body: JSON.stringify({ items, totalAmount }),
+    body: JSON.stringify({ items, totalAmount, shippingAddress }),
     cache: 'no-store',
   });
 
@@ -268,4 +299,84 @@ export async function getMyOrders(jwtToken: string): Promise<Order[]> {
   }
 
   return res.json();
+}
+
+export async function updateOrderStatus(
+  jwtToken: string,
+  orderId: number,
+  status: string,
+  note?: string
+): Promise<Order> {
+  const res = await fetch(`${ORDER_SERVICE_URL}/orders/${orderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ status, note }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to update order status');
+  }
+
+  return res.json();
+}
+
+export interface WishlistItem {
+  id: string;
+  userId: string;
+  productId: string;
+  createdAt: string;
+}
+
+export async function getWishlist(jwtToken: string): Promise<WishlistItem[]> {
+  const res = await fetch(`${CART_SERVICE_URL}/wishlist`, {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch wishlist');
+  }
+
+  return res.json();
+}
+
+export async function addToWishlist(jwtToken: string, productId: string): Promise<WishlistItem> {
+  const res = await fetch(`${CART_SERVICE_URL}/wishlist`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ productId }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    if (res.status === 409) {
+      throw new Error('Already in wishlist');
+    }
+    throw new Error('Failed to add to wishlist');
+  }
+
+  return res.json();
+}
+
+export async function removeFromWishlist(jwtToken: string, productId: string): Promise<void> {
+  const res = await fetch(`${CART_SERVICE_URL}/wishlist/${productId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to remove from wishlist');
+  }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, ShoppingCart, Loader2, Package, Shield } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, Loader2, Package, Shield, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSession, signOut } from '@/lib/auth-client';
@@ -85,13 +85,22 @@ export function Header() {
             Products
           </Link>
           {session?.user && (
-            <Link
-              href="/orders"
-              className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
-            >
-              <Package className="h-4 w-4" />
-              Orders
-            </Link>
+            <>
+              <Link
+                href="/wishlist"
+                className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+              >
+                <Heart className="h-4 w-4" />
+                Wishlist
+              </Link>
+              <Link
+                href="/orders"
+                className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+              >
+                <Package className="h-4 w-4" />
+                Orders
+              </Link>
+            </>
           )}
           {isAdmin && (
             <Link

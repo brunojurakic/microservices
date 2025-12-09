@@ -8,7 +8,15 @@ import { getMyOrders, type Order } from '@/lib/api';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package } from 'lucide-react';
+import { Package, MapPin, Clock } from 'lucide-react';
+
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-500',
+  confirmed: 'bg-blue-500',
+  shipped: 'bg-purple-500',
+  delivered: 'bg-green-500',
+  cancelled: 'bg-red-500',
+};
 
 export default function OrdersPage() {
   const { data: session, isPending } = useSession();
@@ -80,18 +88,68 @@ export default function OrdersPage() {
                       Placed on {new Date(order.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </div>
-                  <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                  <Badge variant="secondary" className={`${statusColors[order.status]} text-white`}>
                     {order.status.toUpperCase()}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between font-bold">
-                      <span>Total Amount</span>
-                      <span>${parseFloat(order.totalAmount).toFixed(2)}</span>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {order.shippingAddress && (
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <MapPin className="h-4 w-4" />
+                        Shipping Address
+                      </h4>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <p>{order.shippingAddress.fullName}</p>
+                        <p>{order.shippingAddress.street}</p>
+                        <p>
+                          {order.shippingAddress.city}, {order.shippingAddress.postalCode}
+                        </p>
+                        <p>{order.shippingAddress.country}</p>
+                        {order.shippingAddress.phone && <p>Phone: {order.shippingAddress.phone}</p>}
+                      </div>
                     </div>
+                  )}
+
+                  {order.statusHistory && order.statusHistory.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Clock className="h-4 w-4" />
+                        Status History
+                      </h4>
+                      <div className="space-y-2">
+                        {order.statusHistory
+                          .sort(
+                            (a, b) =>
+                              new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
+                          )
+                          .map((history) => (
+                            <div key={history.id} className="flex items-start gap-2 text-sm">
+                              <div
+                                className={`w-2 h-2 rounded-full mt-1.5 ${statusColors[history.status] || 'bg-gray-400'}`}
+                              />
+                              <div>
+                                <span className="font-medium capitalize">{history.status}</span>
+                                <span className="text-muted-foreground ml-2">
+                                  {new Date(history.changedAt).toLocaleString()}
+                                </span>
+                                {history.note && (
+                                  <p className="text-muted-foreground">{history.note}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex justify-between font-bold">
+                    <span>Total Amount</span>
+                    <span>${parseFloat(order.totalAmount).toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>

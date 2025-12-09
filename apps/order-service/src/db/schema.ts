@@ -20,13 +20,52 @@ export const orderItems = pgTable('order_items', {
   priceAtPurchase: decimal('price_at_purchase', { precision: 10, scale: 2 }).notNull(),
 });
 
-export const ordersRelations = relations(orders, ({ many }) => ({
+export const orderStatusHistory = pgTable('order_status_history', {
+  id: serial('id').primaryKey(),
+  orderId: integer('order_id')
+    .references(() => orders.id)
+    .notNull(),
+  status: text('status').notNull(),
+  note: text('note'),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+});
+
+export const shippingAddresses = pgTable('shipping_addresses', {
+  id: serial('id').primaryKey(),
+  orderId: integer('order_id')
+    .references(() => orders.id)
+    .notNull(),
+  fullName: text('full_name').notNull(),
+  street: text('street').notNull(),
+  city: text('city').notNull(),
+  postalCode: text('postal_code').notNull(),
+  country: text('country').notNull(),
+  phone: text('phone'),
+});
+
+export const ordersRelations = relations(orders, ({ many, one }) => ({
   items: many(orderItems),
+  statusHistory: many(orderStatusHistory),
+  shippingAddress: one(shippingAddresses),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   order: one(orders, {
     fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+}));
+
+export const orderStatusHistoryRelations = relations(orderStatusHistory, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderStatusHistory.orderId],
+    references: [orders.id],
+  }),
+}));
+
+export const shippingAddressesRelations = relations(shippingAddresses, ({ one }) => ({
+  order: one(orders, {
+    fields: [shippingAddresses.orderId],
     references: [orders.id],
   }),
 }));

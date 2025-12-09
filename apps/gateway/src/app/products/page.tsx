@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
+import { Heart } from 'lucide-react';
 import { getJWTToken } from '@/lib/jwt';
 import { useSession } from '@/lib/auth-client';
 import {
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/api';
 
 interface Product {
   id: string;
@@ -39,6 +40,8 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [togglingWishlist, setTogglingWishlist] = useState<string | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -61,6 +64,21 @@ export default function ProductsPage() {
 
     fetchData();
   }, [selectedCategory]);
+
+  useEffect(() => {
+    async function fetchWishlist() {
+      if (!session?.user) return;
+      try {
+        const token = await getJWTToken();
+        if (!token) return;
+        const wishlist = await getWishlist(token);
+        setWishlistIds(new Set(wishlist.map((item) => item.productId)));
+      } catch (error) {
+        console.error('Failed to fetch wishlist:', error);
+      }
+    }
+    fetchWishlist();
+  }, [session]);
 
   const handleAddToCart = async (productId: string) => {
     if (!session?.user) {
@@ -96,6 +114,35 @@ export default function ProductsPage() {
       alert('Failed to add item to cart. Please try again.');
     } finally {
       setAddingToCart(null);
+    }
+  };
+
+  const handleToggleWishlist = async (productId: string) => {
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
+
+    setTogglingWishlist(productId);
+    try {
+      const token = await getJWTToken();
+      if (!token) return;
+
+      if (wishlistIds.has(productId)) {
+        await removeFromWishlist(token, productId);
+        setWishlistIds((prev) => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
+      } else {
+        await addToWishlist(token, productId);
+        setWishlistIds((prev) => new Set(prev).add(productId));
+      }
+    } catch (error) {
+      console.error('Failed to toggle wishlist:', error);
+    } finally {
+      setTogglingWishlist(null);
     }
   };
 
@@ -149,6 +196,19 @@ export default function ProductsPage() {
                 <div className="flex h-full items-center justify-center">
                   <span className="text-muted-foreground">No image</span>
                 </div>
+              )}
+              {session?.user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                  onClick={() => handleToggleWishlist(product.id)}
+                  disabled={togglingWishlist === product.id}
+                >
+                  <Heart
+                    className={`h-5 w-5 ${wishlistIds.has(product.id) ? 'fill-red-500 text-red-500' : ''}`}
+                  />
+                </Button>
               )}
             </div>
 

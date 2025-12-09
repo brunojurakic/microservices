@@ -28,7 +28,18 @@ export const cartItems = pgTable('cart_items', {
     .notNull(),
 });
 
+export const wishlists = pgTable('wishlists', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull(),
+  productId: text('product_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export type Cart = typeof carts.$inferSelect;
 export type NewCart = typeof carts.$inferInsert;
 export type CartItem = typeof cartItems.$inferSelect;
 export type NewCartItem = typeof cartItems.$inferInsert;
+export type Wishlist = typeof wishlists.$inferSelect;
+export type NewWishlist = typeof wishlists.$inferInsert;

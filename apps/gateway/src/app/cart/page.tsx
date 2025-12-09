@@ -12,10 +12,12 @@ import {
   clearCart as clearCartAPI,
   type Product,
   type CartItem,
+  type ShippingAddressInput,
 } from '@/lib/api';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 
@@ -29,6 +31,15 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddressInput>({
+    fullName: '',
+    street: '',
+    city: '',
+    postalCode: '',
+    country: '',
+    phone: '',
+  });
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -273,12 +284,74 @@ export default function CartPage() {
                     </div>
                   </div>
                 </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-3">Shipping Address</h3>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Full Name *"
+                      value={shippingAddress.fullName}
+                      onChange={(e) =>
+                        setShippingAddress({ ...shippingAddress, fullName: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Street Address *"
+                      value={shippingAddress.street}
+                      onChange={(e) =>
+                        setShippingAddress({ ...shippingAddress, street: e.target.value })
+                      }
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="City *"
+                        value={shippingAddress.city}
+                        onChange={(e) =>
+                          setShippingAddress({ ...shippingAddress, city: e.target.value })
+                        }
+                      />
+                      <Input
+                        placeholder="Postal Code *"
+                        value={shippingAddress.postalCode}
+                        onChange={(e) =>
+                          setShippingAddress({ ...shippingAddress, postalCode: e.target.value })
+                        }
+                      />
+                    </div>
+                    <Input
+                      placeholder="Country *"
+                      value={shippingAddress.country}
+                      onChange={(e) =>
+                        setShippingAddress({ ...shippingAddress, country: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Phone (optional)"
+                      value={shippingAddress.phone || ''}
+                      onChange={(e) =>
+                        setShippingAddress({ ...shippingAddress, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
               </CardContent>
               <CardFooter>
                 <Button
                   className="w-full"
                   size="lg"
                   onClick={async () => {
+                    if (
+                      !shippingAddress.fullName ||
+                      !shippingAddress.street ||
+                      !shippingAddress.city ||
+                      !shippingAddress.postalCode ||
+                      !shippingAddress.country
+                    ) {
+                      alert('Please fill in all required shipping fields');
+                      return;
+                    }
+
+                    setIsCheckingOut(true);
                     try {
                       const token = await getJWTToken();
                       if (!token) {
@@ -294,7 +367,12 @@ export default function CartPage() {
                         price: parseFloat(item.product.price),
                       }));
 
-                      const order = await createOrder(token, orderItems, totalPrice);
+                      const order = await createOrder(
+                        token,
+                        orderItems,
+                        totalPrice,
+                        shippingAddress
+                      );
 
                       await clearCart(token);
                       window.dispatchEvent(new CustomEvent('cartUpdated'));
@@ -303,11 +381,13 @@ export default function CartPage() {
                     } catch (error) {
                       console.error('Checkout failed:', error);
                       alert('Checkout failed. Please try again.');
+                    } finally {
+                      setIsCheckingOut(false);
                     }
                   }}
-                  disabled={isPending || cartItems.length === 0}
+                  disabled={isPending || cartItems.length === 0 || isCheckingOut}
                 >
-                  Proceed to Checkout
+                  {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
               </CardFooter>
             </Card>
