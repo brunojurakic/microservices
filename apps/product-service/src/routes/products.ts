@@ -16,6 +16,37 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+router.post('/categories', authenticateJWT, requireAdmin, async (req: AuthRequest, res) => {
+  try {
+    const { name, slug, description } = req.body;
+
+    if (!name || !slug) {
+      return res.status(400).json({ error: 'Name and slug are required' });
+    }
+
+    const [newCategory] = await db
+      .insert(categories)
+      .values({
+        name,
+        slug,
+        description: description || null,
+      })
+      .returning();
+
+    res.status(201).json(newCategory);
+  } catch (error: any) {
+    console.error('Error creating category:', error);
+
+    if (error.code === '23505') {
+      return res.status(400).json({
+        message: 'A category with this name or slug already exists.',
+      });
+    }
+
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const { categoryId } = req.query;

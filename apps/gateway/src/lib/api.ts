@@ -48,6 +48,32 @@ export async function getCategories(): Promise<Category[]> {
   return res.json();
 }
 
+export async function createCategory(
+  jwtToken: string,
+  category: {
+    name: string;
+    slug: string;
+    description?: string | null;
+  }
+): Promise<Category> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/products/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(category),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to create category');
+  }
+
+  return res.json();
+}
+
 export async function getProducts(categoryId?: string): Promise<Product[]> {
   const url = categoryId
     ? `${PRODUCT_SERVICE_URL}/products?categoryId=${categoryId}`
@@ -71,6 +97,28 @@ export async function getProduct(id: string): Promise<Product> {
 
   if (!res.ok) {
     throw new Error('Failed to fetch product');
+  }
+
+  return res.json();
+}
+
+export async function updateProduct(
+  jwtToken: string,
+  id: string,
+  product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<Product> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/products/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify(product),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to update product');
   }
 
   return res.json();

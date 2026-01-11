@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getProducts, deleteProduct, type Product } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   Table,
@@ -66,11 +66,19 @@ export default function AdminProductsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-        <Button asChild>
-          <Link href="/admin/products/new">
-            <Plus className="mr-2 h-4 w-4" /> Add Product
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/categories/new">
+              <Plus className="mr-2 h-4 w-4" /> New Category
+            </Link>
+          </Button>
+
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border bg-card">
@@ -94,6 +102,11 @@ export default function AdminProductsPage() {
                 <TableCell>${product.price}</TableCell>
                 <TableCell>{product.stock}</TableCell>
                 <TableCell className="text-right">
+                  <Button asChild variant="ghost" size="icon">
+                    <Link href={`/admin/products/${product.id}`}>
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

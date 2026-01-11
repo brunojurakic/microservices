@@ -1,0 +1,90 @@
+services:
+  gateway-db:
+    image: postgres:16
+    container_name: gateway-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gateway_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - gateway_data:/var/lib/postgresql/data
+
+  product-db:
+    image: postgres:16
+    container_name: product-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: product_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - product_data:/var/lib/postgresql/data
+
+  order-db:
+    image: postgres:16
+    container_name: order-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order_db
+    ports:
+      - '5434:5432'
+    volumes:
+      - order_data:/var/lib/postgresql/data
+
+  cart-db:
+    image: postgres:16
+    container_name: cart-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cart_db
+    ports:
+      - '5435:5432'
+    volumes:
+      - cart_data:/var/lib/postgresql/data
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - apps/gateway/.env.docker
+
+  product-service:
+    build:
+      context: .
+      dockerfile: apps/product-service/Dockerfile
+    env_file:
+      - apps/product-service/.env.docker
+    ports:
+      - '3001:3001'
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: apps/cart-service/Dockerfile
+    env_file:
+      - apps/cart-service/.env.docker
+    ports:
+      - '3002:3002'
+
+  order-service:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    env_file:
+      - apps/order-service/.env.docker
+    ports:
+      - '3003:3003'
+
+volumes:
+  gateway_data:
+  product_data:
+  order_data:
+  cart_data:
